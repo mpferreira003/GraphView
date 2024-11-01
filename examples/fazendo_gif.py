@@ -9,7 +9,7 @@ from navigator import Navigator
 n = 100
 mp = MundoPequeno(n,seed=42)
 mp.create_data(dim=2)
-mp.create_connections(3,0.1) ## k=3, p=0.1
+mp.create_connections(3,0.02) ## k=3, p=0.1
 connections = mp.get_connections()
 
 
