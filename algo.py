@@ -1,3 +1,5 @@
+import cv2
+import time
 from navigator import Navigator
 from queue import Queue, PriorityQueue 
 from dataclasses import dataclass, field
@@ -9,6 +11,17 @@ class PrioritizedItem:
     item: Any=field(compare=False)
 
 
+TIME_PER_IT = 0.25
+#TIME_PER_IT = 0
+
+def mostra_grafo(grafo: Navigator, last=False):
+    img = grafo.plot()
+    cv2.imshow('Grafo',img)
+    if not last:
+        cv2.waitKey(20)
+        time.sleep(TIME_PER_IT)
+
+
 class DFS:
     def __init__(self, grafo: Navigator):
         self.no_final = None
@@ -16,12 +29,14 @@ class DFS:
         self.visitados = set()
 
     def _dfs(self, cur: int) -> bool:
+        mostra_grafo(self.grafo)
         self.visitados.add(cur)
 
         for outro in self.grafo.get_neighboors(cur):            
             if outro not in self.visitados:
                 self.grafo.nav(cur, outro)
-                if outro == self.no_final or _dfs(outro):
+                print(f'DFS: Indo de {cur} -> {outro}')
+                if outro == self.no_final or self._dfs(outro):
                     return True
 
         return False
@@ -33,7 +48,7 @@ class DFS:
         
         self.no_final = no_final
         self.visitados.clear()
-        return _dfs(no_inicial)
+        return self._dfs(no_inicial)
 
 
 class BFS:
@@ -47,14 +62,21 @@ class BFS:
         fila = Queue()
         fila.put(no_inicial)
         
-        visitados = set()
+        visitados = set([no_inicial])
 
         while not fila.empty():
+            mostra_grafo(self.grafo)
+            
             cur = fila.get()
-            visitados.add(cur)
+            print(f'BFS: Expandindo {cur}')
+
             for outro in self.grafo.get_neighboors(cur):
                 if outro not in visitados:
                     self.grafo.nav(cur, outro)
+                    visitados.add(cur)
+
+                    print(f'BFS: Indo de {cur} -> {outro}')
+                    
                     if outro == no_final:
                         return True
                     
@@ -81,6 +103,8 @@ class AEstrela:
         distancias = {no_inicial: 0}
 
         while not fila.empty():
+            mostra_grafo(self.grafo)
+            
             item = fila.get()
             (cur, dist) = item.item
 
@@ -123,26 +147,27 @@ class BestFirstSearch:
         self.grafo = grafo
         self.heuristica = heuristica 
 
-    def run(self, no_inicial: int, no_final: int, max_it: int) -> bool:
+    def run(self, no_inicial: int, no_final: int, max_it: int = 100) -> bool:
         if no_inicial == no_final:
             return True
         
         fila = PriorityQueue()
-        fila.put(PriorityQueue(0, no_inicial))
+        fila.put(PrioritizedItem(0, no_inicial))
 
-        ultimo = None
         while not fila.empty() and max_it > 0:
+            mostra_grafo(self.grafo)
+                    
             max_it -= 1
             cur = fila.get().item
 
-            if ultimo is not None:
-                self.grafo.nav(ultimo, cur)
             if cur == no_final:
                 return True
             
             ultimo = cur
             
             for outro in self.grafo.get_neighboors(cur):
+                self.grafo.nav(cur, outro)
+                
                 est = self.heuristica(outro)
                 fila.put(PrioritizedItem(est, outro))
     
@@ -169,10 +194,15 @@ class HillClimb:
         cur_est = self.heuristica(no_inicial)
 
         while cur != no_final:
+            mostra_grafo(self.grafo)
+            print(f'HillClimb: expandindo {cur} ({cur_est = })')
+            
             for outro in self.grafo.get_neighboors(cur):
-                est = self.heuristica()
+                est = self.heuristica(outro)
+                print(f'HillClimb: tentando {outro = } ({est = })')
                 if est < cur_est:
                     self.grafo.nav(cur, outro)
+                    print(f'HillClimb: inde de {cur} -> {outro}')
                     cur = outro
                     cur_est = est
 
