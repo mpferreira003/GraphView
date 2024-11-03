@@ -123,7 +123,63 @@ class BestFirstSearch:
         self.grafo = grafo
         self.heuristica = heuristica 
 
-    def run(self, no_inicial: int, no_final: int) -> bool:
-        pass    
+    def run(self, no_inicial: int, no_final: int, max_it: int) -> bool:
+        if no_inicial == no_final:
+            return True
+        
+        fila = PriorityQueue()
+        fila.put(PriorityQueue(0, no_inicial))
+
+        ultimo = None
+        while not fila.empty() and max_it > 0:
+            max_it -= 1
+            cur = fila.get().item
+
+            if ultimo is not None:
+                self.grafo.nav(ultimo, cur)
+            if cur == no_final:
+                return True
+            
+            ultimo = cur
+            
+            for outro in self.grafo.get_neighboors(cur):
+                est = self.heuristica(outro)
+                fila.put(PrioritizedItem(est, outro))
     
+        return False
+
+
+class HillClimb:
+    # Tem varios, nao sei se ele quer o que vai no primeiro
+    # vizinho bom que achar ou o que vai no melhor vizinho
+    # Implementei o mais facil, que e no primeiro vizinho
+    
+    def __init__(self, grafo: Navigator, heuristica):
+        # A heuristica e uma estimativa da distancia do no atual
+        # ate o destino
+        
+        self.grafo = grafo
+        self.heuristica = heuristica        
+
+    def run(self, no_inicial: int, no_final: int) -> bool:
+        if no_inicial == no_final:
+            return True
+
+        cur = no_inicial
+        cur_est = self.heuristica(no_inicial)
+
+        while cur != no_final:
+            for outro in self.grafo.get_neighboors(cur):
+                est = self.heuristica()
+                if est < cur_est:
+                    self.grafo.nav(cur, outro)
+                    cur = outro
+                    cur_est = est
+
+                    break
+            else:
+                # Nao achou nenhum vizinho melhor
+                return False
+
+        return True
     
