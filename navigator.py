@@ -1,11 +1,16 @@
 import numpy as np
 from grafo import VisualGraph
+from PIL import Image
+import cv2
+
 
 CONNECTED = True
 DISCONNECTED = False
 
 class Navigator(VisualGraph):
-    def __init__(self):
+    def __init__(self,allow_gif=False):
+        self.allow_gif=allow_gif
+        self.gif_images = []
         super().__init__()
     def compile(self,img_shape:np.ndarray,
                 border:int=30,
@@ -29,7 +34,7 @@ class Navigator(VisualGraph):
                 thickness=thickness,
                 thickness_add=thickness_add
                 )
-        
+        self.goal=None
         
     def get_neighboors(self,current_node_id:int,current_is_internal=False,return_internal=False):
         if current_is_internal:
@@ -65,17 +70,82 @@ class Navigator(VisualGraph):
         
         
         neighboors = self.get_neighboors(current_node_id,return_internal=True)
-        print(f"mapped_current_id: {mapped_current_id}  mapped_destination_id:{mapped_destination_id} neighboors:",neighboors)
+        
         if mapped_destination_id in neighboors:
             self.set_aresta_state(mapped_current_id,mapped_destination_id,CONNECTED)
             self.set_node_state(mapped_destination_id,CONNECTED)
+            if self.allow_gif:
+                self.gif_images.append(self.plot(len(self.gif_images)))
             
-            print("conseguiu setar aresta: ",self.set_aresta_state(mapped_destination_id,mapped_current_id,CONNECTED))
-            print("conseguiu setar o no: ",self.set_node_state(mapped_current_id,CONNECTED))
+            return destination_id == self.goal if self.goal is not None else False  ## retorna se o goal foi atingido
+        else:
+            raise ValueError("Ok, provavelmente deu algum erro. O nó de destino não está entre os vizinhos do nó inicial")
+        
+    def undo_nav(self,current_node_id:int,destination_id:int):
+        """
+        Desfaz uma ação que já foi feita de navegação
+        Args:
+            current_node_id:int - id do nó de onde você saiu para chegar 
+                no destination
+            destination_id:int - id do nó para ir. O mapping
+                é passado em cima dele
+        Returns:
+            :bool - se foi possível ir até a localização ou não
+        """
+        mapped_destination_id = self.node_id_mapping[destination_id]
+        mapped_current_id = self.node_id_mapping[current_node_id]
+        
+        if self.nodes[mapped_destination_id].activate:
+            return False ## já foi visitado
+        
+        
+        neighboors = self.get_neighboors(current_node_id,return_internal=True)
+        print(f"mapped_current_id: {mapped_current_id}  mapped_destination_id:{mapped_destination_id} neighboors:",neighboors)
+        if mapped_destination_id in neighboors:
+            self.set_aresta_state(mapped_current_id,mapped_destination_id,DISCONNECTED)
+            self.set_node_state(mapped_destination_id,DISCONNECTED)
+            
+            # print("conseguiu setar aresta: ",self.set_aresta_state(mapped_destination_id,mapped_current_id,DISCONNECTED))
+            # print("conseguiu setar o no: ",self.set_node_state(mapped_current_id,DISCONNECTED))
             return True ## foi possível ir até a localização
         else:
             print("Não foi possível ir até a loc")
-            return False ## não foi possível ir até a localização
+            return False ## não foi possível ir até a localização    
+    
+    def set_goal(self,node_id:int,color=(0,200,200),color_add=70):
+        """
+        Função para alterar os atributos do goal
+        Args:
+            node_id:int - id externo do nó que vira Goal
+        """
+        internal_node_id = self.node_id_mapping[node_id]
+        self.goal = internal_node_id
+        self.nodes[internal_node_id].color_activate = color
+        self.nodes[internal_node_id].default_color_append = color_add
+        self.nodes[internal_node_id].activate = True
+    
+    def make_gif(self,output_name:str,delay_frame:int=100):
+        """
+        Função para gerar um gif do grafo
+        Args:
+            output_name:str - nome do .gif que ficará salvo na pasta saves/
+            delay_frame:int [default = 100] - tempo por frame em milissegundos
+        """
+        if not self.allow_gif:
+            raise ValueError("Você não habilitou a gravação 'allow_gif'")
+        
+        pil_images = [Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)) for img in self.gif_images]
+        
+        # Salva como GIF
+        pil_images[0].save(
+            f'saves/{output_name}.gif',
+            save_all=True,
+            append_images=pil_images[1:],
+            optimize=False,
+            duration=delay_frame,   # Duração de cada quadro em milissegundos
+            loop=0                  # Loop infinito (0 significa loop contínuo)
+        )
+    
     def reset(self):
         """
         Volta a rede ao estado inicial

@@ -228,7 +228,7 @@ class VisualGraph:
                  thickness=thickness,
                  thickness_add=thickness_add
                  )
-    def plot(self):
+    def plot(self,step=None):
         if not self.compilated:
             raise ValueError("Você deve fazer o .compile do grafo antes de chamar o plot")
         
@@ -238,6 +238,8 @@ class VisualGraph:
         for (i,j),aresta in self.arestas.items():
             img = aresta.draw(img)
         
+        if step is not None:
+            img = cv2.putText(img,f'{step}',(30,30),cv2.FONT_HERSHEY_COMPLEX,1,(0,0,0),1)
         return img
     
     def set_node_state(self,node_id:int,state:bool):
@@ -279,7 +281,6 @@ class VisualGraph:
             return True
         else:
             return False
-
     
     def save(self,file_name:str):
         """
