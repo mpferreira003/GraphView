@@ -1,8 +1,9 @@
 import numpy as np
 from grafo import VisualGraph
+# from pil import Image
 from PIL import Image
 import cv2
-
+import os
 
 CONNECTED = True
 DISCONNECTED = False
@@ -19,12 +20,13 @@ class Navigator(VisualGraph):
                 color_add=None,
                 radius=None,radius_add=None,
                 thickness=None,thickness_add=None,
-                kwargs_graph={}):
+                kwargs_graph={},nodes_positions=None):
         """
         Compila e seta os atributos
         """
         super().compile(img_shape,
-                border=border,kwargs_graph=kwargs_graph)
+                border=border,kwargs_graph=kwargs_graph,nodes_positions=nodes_positions)
+        
         super().set_attributes(
                 color_deactivate=color_deactivate,
                 color_activate=color_activate,
@@ -35,7 +37,7 @@ class Navigator(VisualGraph):
                 thickness_add=thickness_add
                 )
         self.goal=None
-        
+        self.allow_gif = self.allow_gif
     def get_neighboors(self,current_node_id:int,current_is_internal=False,return_internal=False):
         if current_is_internal:
             mapped_current_id = current_is_internal
@@ -60,27 +62,24 @@ class Navigator(VisualGraph):
         Returns:
             :bool - se foi possível ir até a localização ou não
         """
-        
         ## etapa de mapeamento para id interno da rede
         mapped_destination_id = self.node_id_mapping[destination_id]
         mapped_current_id = self.node_id_mapping[current_node_id]
-        
-        if self.nodes[mapped_destination_id].activate:
-            return False ## já foi visitado
-        
+
         
         neighboors = self.get_neighboors(current_node_id,return_internal=True)
         
         if mapped_destination_id in neighboors:
-            self.set_aresta_state(mapped_current_id,mapped_destination_id,CONNECTED)
+            conseguiu_setar = self.set_aresta_state(mapped_current_id,mapped_destination_id,CONNECTED)
             self.set_node_state(mapped_destination_id,CONNECTED)
-            if self.allow_gif:
-                self.gif_images.append(self.plot(len(self.gif_images)))
-            
-            return destination_id == self.goal if self.goal is not None else False  ## retorna se o goal foi atingido
+            chegou_no_goal = destination_id == self.goal if self.goal is not None else False  ## retorna se o goal foi atingido
+            return chegou_no_goal
         else:
             raise ValueError("Ok, provavelmente deu algum erro. O nó de destino não está entre os vizinhos do nó inicial")
         
+    def add_imgtogif(self):
+        if self.allow_gif:
+            self.gif_images.append(self.plot(len(self.gif_images)))
     def undo_nav(self,current_node_id:int,destination_id:int):
         """
         Desfaz uma ação que já foi feita de navegação
@@ -94,7 +93,6 @@ class Navigator(VisualGraph):
         """
         mapped_destination_id = self.node_id_mapping[destination_id]
         mapped_current_id = self.node_id_mapping[current_node_id]
-        
         if self.nodes[mapped_destination_id].activate:
             return False ## já foi visitado
         
@@ -118,8 +116,10 @@ class Navigator(VisualGraph):
         Args:
             node_id:int - id externo do nó que vira Goal
         """
+        print(f"Goal setado para {node_id}")
         internal_node_id = self.node_id_mapping[node_id]
         self.goal = internal_node_id
+        self.goal_xy = self.nodes[internal_node_id].center
         self.nodes[internal_node_id].color_activate = color
         self.nodes[internal_node_id].default_color_append = color_add
         self.nodes[internal_node_id].activate = True
@@ -133,8 +133,15 @@ class Navigator(VisualGraph):
         """
         if not self.allow_gif:
             raise ValueError("Você não habilitou a gravação 'allow_gif'")
-        
+        print("quantidade de imagens: ",len(self.gif_images))
         pil_images = [Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)) for img in self.gif_images]
+        
+        
+        ## Prevenção para caso o gif não esteja funcionando
+        # output_dir = 'saves'
+        # output_path = os.path.join(output_dir, 'Algo.gif')
+        # os.makedirs(output_dir, exist_ok=True)
+        
         
         # Salva como GIF
         pil_images[0].save(
@@ -155,5 +162,16 @@ class Navigator(VisualGraph):
         for aresta in self.arestas.values():
             aresta.set_state(DISCONNECTED)
         
-    
-
+    def get_pos(self,node_id:int):
+        """
+        Retorna a posição xy de um nó
+        Args:
+            node_id:int - id externo do nó (será feito mapping)
+        Returns:
+            tuple - posição x,y do nó
+        """
+        internal_node_id = self.node_id_mapping[node_id]
+        return self.nodes[internal_node_id].center
+    def get_pos_goal(self):
+        return self.goal_xy
+        

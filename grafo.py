@@ -15,8 +15,9 @@ def add_color(color1,color2):
 
 
 class Node:
-    def __init__(self,center):
-        self.center=np.array(center,dtype=int)
+    def __init__(self,center_img,center):
+        self.center_img=np.array(center_img,dtype=int)
+        self.center=np.array(center)
         self.activate = False
     def set_state(self,state:bool):
         self.activate=state
@@ -37,10 +38,10 @@ class Node:
     def draw(self,img):
         if self.activate:
             border_color = add_color(self.color_activate,self.default_color_append)
-            img = cv2.circle(img,self.center,self.radius+self.radius_add,border_color,-1)
-            return cv2.circle(img,self.center,self.radius,self.color_activate,-1)
+            img = cv2.circle(img,self.center_img,self.radius+self.radius_add,border_color,-1)
+            return cv2.circle(img,self.center_img,self.radius,self.color_activate,-1)
         else:
-            return cv2.circle(img,self.center,self.radius,self.color_deactivate,-1)
+            return cv2.circle(img,self.center_img,self.radius,self.color_deactivate,-1)
 
 class Aresta:
     def __init__(self,p1,p2,weight):
@@ -158,13 +159,11 @@ class VisualGraph:
         translade = self.img_shape/2 ## valor a ser somado em todos os points
         
         desired_img_shape = self.img_shape - 2*border ## retira como se estivesse tirando os 4 cantos
-        
         if nodes_positions is None:
             positions = nx.spring_layout(self.G,**kwargs_graph)
             points = list(positions.values())
         else:
             points = nodes_positions
-        
         
         
         min_dims = np.min(points,axis=0)
@@ -177,7 +176,7 @@ class VisualGraph:
         
         ## cria os nos e as arestas
         nodes_positions_in_img = [get_imgposition(x,y) for x,y in points]
-        self.nodes = [Node(center) for center in nodes_positions_in_img]
+        self.nodes = [Node(center,center_real) for center,center_real in list(zip(nodes_positions_in_img,points))]
         
         self.arestas = {} ## relaciona nós i,j através de uma aresta
         for node_idx,connections in list(self.connections.items()):
