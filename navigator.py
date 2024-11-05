@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from grafo import VisualGraph
 # from pil import Image
 from PIL import Image
@@ -38,7 +39,7 @@ class Navigator(VisualGraph):
                 )
         self.goal=None
         self.allow_gif = self.allow_gif
-    def get_neighboors(self,current_node_id:int,current_is_internal=False,return_internal=False):
+    def get_neighboors(self,current_node_id:int,current_is_internal=False,return_internal=False,return_weight=False):
         if current_is_internal:
             mapped_current_id = current_is_internal
         else:
@@ -49,7 +50,15 @@ class Navigator(VisualGraph):
         
         if not return_internal:
             neighboors = [int(self.node_id_antimapping[neighboor]) for neighboor in neighboors]
-        return neighboors
+
+        if return_weight:
+            x, y = self.get_pos(current_node_id)
+            dist = lambda par: math.sqrt((par[0]-x)**2 + (par[1]-y)**2)
+            
+            return [(idx, dist(self.get_pos(idx))) for idx in neighboors]
+        else:
+            return neighboors
+        
     def nav(self,current_node_id:int,destination_id:int):
         """
         Recebe um nó e tenta ir até ele. É necessário

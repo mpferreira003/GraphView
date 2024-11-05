@@ -109,6 +109,7 @@ class AEstrela:
         while not fila.empty():
             
             item = fila.get()
+            est = item.priority
             (cur, dist) = item.item
 
             # Se depois de por na fila encontrou-se um caminho melhor
@@ -117,9 +118,9 @@ class AEstrela:
                 continue
 
             print(f'Expandindo {cur} ({dist = })')
+            self.heuristic_historic.append(est)
             
-            for outro in self.grafo.get_neighboors(cur):
-                peso = 1
+            for (outro, peso) in self.grafo.get_neighboors(cur, return_weight=True):
                 dist_outro = dist + peso
                 
                 # Se essa eh a melhor distancia encontrada ate agora
@@ -136,7 +137,6 @@ class AEstrela:
                     est = self.heuristica(outro_xy,goal_xy)*w
                     # print(f"{outro_xy} -> {goal_xy}: {est}")
                     est_outro = dist_outro + est
-                    self.heuristic_historic.append(est) ## guarda no histórico
                     
                     distancias[outro] = dist_outro                    
                     fila.put(PrioritizedItem(est_outro, (outro, dist_outro)))

@@ -11,7 +11,7 @@ connections = mp.get_connections()
 
 ## ---- roda o algoritmo
 exp_name, delay, historic = pipeline(connections,
-                                     'HillClimb',
+                                     'AEstrela',
                                      'euclidian',
                                      1,
                                      13,
