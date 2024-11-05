@@ -11,15 +11,16 @@ connections = mp.get_connections()
 
 ## ---- roda o algoritmo
 exp_name, delay, historic = pipeline(connections,
-                                     'DFS',
-                                     'None',
-                                     20,
-                                     6,
-                                    #  gif_name='batata',
-                                    #  try_plot=True,
+                                     'HillClimb',
+                                     'euclidian',
+                                     1,
+                                     13,
+                                     gif_name='batata',
+                                     try_plot=True,
                                     #  nodes_positions=mp.embeddings,
                                      kwargs_gif = {'delay_frame':200},
                                     #  kwargs_run = {'max_it':20} ## dá pra colocar o w do AEstrela também
                                      )
 
-plot_historic(exp_name,delay,historic)
+if historic:
+    plot_historic(exp_name,delay,historic)

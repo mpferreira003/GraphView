@@ -68,7 +68,7 @@ def pipeline(mundoPequeno_connections:list,
         graph.make_gif(gif_name,**kwargs_gif)
     
     if heuristica is None: ## Se não tiver heurística
-        return experiment_name,delay_time,None
+        return experiment_name,delay_time,[]
     else:
         return experiment_name,delay_time,algorithm.heuristic_historic
 

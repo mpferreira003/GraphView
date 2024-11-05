@@ -72,7 +72,7 @@ class BFS:
             for outro in self.grafo.get_neighboors(cur):
                 if outro not in visitados:
                     self.grafo.nav(cur, outro)
-                    visitados.add(cur)
+                    visitados.add(outro)
                     
                     print(f'BFS: Indo de {cur} -> {outro}')
                     
@@ -91,12 +91,14 @@ class AEstrela:
         # algum valor numerico >= 0 (int ou float)
         self.grafo = grafo
         self.heuristica = heuristica 
-        self.goal_xy = grafo.get_pos_goal()
         self.heuristic_historic = []
     
     def run(self, no_inicial: int, no_final: int,try_plot=False,w:float=1) -> bool:
         if no_inicial == no_final:
             return True
+
+        goal_xy = self.grafo.get_pos_goal()
+        print(f'{goal_xy = }')
         
         fila = PriorityQueue()
         fila.put(PrioritizedItem(0, (no_inicial, 0)))
@@ -113,6 +115,8 @@ class AEstrela:
             # ignora 
             if cur in distancias and distancias[cur] < dist:
                 continue
+
+            print(f'Expandindo {cur} ({dist = })')
             
             for outro in self.grafo.get_neighboors(cur):
                 peso = 1
@@ -129,13 +133,15 @@ class AEstrela:
                     # Calcula a estimativa do proximo vertice
                     # Usado para decidir a prioridade na fila
                     outro_xy = self.grafo.get_pos(outro)
-                    est = self.heuristica(outro_xy,self.goal_xy)*w
-                    # print(f"{outro_xy} -> {self.goal_xy}: {est}")
+                    est = self.heuristica(outro_xy,goal_xy)*w
+                    # print(f"{outro_xy} -> {goal_xy}: {est}")
                     est_outro = dist_outro + est
-                    self.heuristic_historic.append(est_outro) ## guarda no histórico
+                    self.heuristic_historic.append(est) ## guarda no histórico
                     
                     distancias[outro] = dist_outro                    
                     fila.put(PrioritizedItem(est_outro, (outro, dist_outro)))
+
+                    print(f'Indo de {cur} -> {outro} ({outro_xy = }, {est = }, tot = {est_outro})')
         
         return False
     
@@ -156,17 +162,17 @@ class BestFirstSearch:
         self.heuristica = heuristica 
         self.heuristic_historic = []
 
-    def run(self, no_inicial: int, no_final: int, max_it: int = 100,try_plot=False) -> bool:
+    def run(self, no_inicial: int, no_final: int, try_plot=False) -> bool:
         if no_inicial == no_final:
             return True
         
         fila = PriorityQueue()
         est = self.heuristica(self.grafo.get_pos(no_inicial),self.grafo.goal_xy)
-        fila.put(PrioritizedItem(est, no_inicial))
 
-        while not fila.empty() and max_it > 0:
-                    
-            max_it -= 1
+        fila.put(PrioritizedItem(est, no_inicial))
+        visited = set([no_inicial])
+        
+        while not fila.empty():
             getted = fila.get()
             cur = getted.item
             
@@ -177,11 +183,13 @@ class BestFirstSearch:
                 return True
             
             for outro in self.grafo.get_neighboors(cur):
-                self.grafo.nav(cur, outro)
+                if outro not in visited:
+                    self.grafo.nav(cur, outro)
+                    visited.add(outro)
                 
-                outro_xy = self.grafo.get_pos(outro)
-                est = self.heuristica(outro_xy,self.grafo.goal_xy)
-                fila.put(PrioritizedItem(est, outro))
+                    outro_xy = self.grafo.get_pos(outro)
+                    est = self.heuristica(outro_xy,self.grafo.goal_xy)
+                    fila.put(PrioritizedItem(est, outro))
         
         
         return False
