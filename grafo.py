@@ -1,3 +1,15 @@
+"""
+
+Este código implementa um grafo visual usando as bibliotecas networkx e opencv.
+Ele cria um grafo com nós e arestas, onde cada nó tem uma posição e estado
+(ativo ou inativo), e as arestas conectam os nós com um peso.
+O estado de nós e arestas pode ser alterado, e a visualização do grafo é feita
+com círculos para os nós e linhas para as arestas.
+A visualização pode ser modificada para mostrar diferentes estados 
+(ativado/desativado) usando cores. 
+O grafo pode ser salvo e carregado a partir de um arquivo .pkl.
+
+"""
 import networkx as nx
 import cv2
 import numpy as np
@@ -5,6 +17,8 @@ import pickle
 from typing import cast
 
 
+# Soma vetorial de duas triplas de cores
+# Se passar de 255 ou de 0, ele conserta o limite
 def add_color(color1, color2):
     color3 = np.array(color1, dtype=int) + np.array(color2, dtype=int)
     for i in range(3):
@@ -15,14 +29,15 @@ def add_color(color1, color2):
     return color3.tolist()
 
 
+# Classe que representa um nó no grafo visual
 class Node:
     def __init__(self, center_img, center):
-        self.center_img = np.array(center_img, dtype=int)
-        self.center = np.array(center)
-        self.activate = False
+        self.center_img = np.array(center_img, dtype=int)  # posição na imagem
+        self.center = np.array(center)  # posição no gráfico
+        self.activate = False  # Estado inicial (desativado)
 
     def set_state(self, state: bool):
-        self.activate = state
+        self.activate = state  # Altera o estado (ativo ou inativo)
 
     def set_attributes(self,
                        color_activate,
@@ -30,63 +45,70 @@ class Node:
                        default_color_append=70,
                        radius=10,
                        radius_add=10):
-        self.activate = False  # começa desativado
+        self.activate = False  # Começa desativado
 
-        self.radius = radius  # raio padrão
-        self.radius_add = radius_add  # raio que aumenta quando é selecionado
+        self.radius = radius  # Raio padrão do nó
+        self.radius_add = radius_add  # Raio extra quando ativo
 
-        self.color_activate = color_activate
-        self.color_deactivate = color_deactivate
-        self.default_color_append = default_color_append
+        self.color_activate = color_activate  # Cor do nó quando ativado
+        self.color_deactivate = color_deactivate  # Cor do nó quando desativado
+        self.default_color_append = default_color_append  # Cor adicional para bordas
 
     def draw(self, img):
+        # Desenha o nó na imagem
         if self.activate:
+            # Desenha nó ativado com cor de borda
             border_color = add_color(
                 self.color_activate, self.default_color_append)
             img = cv2.circle(img, self.center_img, self.radius +
                              self.radius_add, border_color, -1)
             return cv2.circle(img, self.center_img, self.radius, self.color_activate, -1)
         else:
+            # Desenha nó desativado com cor padrão
             return cv2.circle(img, self.center_img, self.radius, self.color_deactivate, -1)
 
 
+# Classe que representa uma aresta entre dois nós no grafo
 class Aresta:
     def __init__(self, p1, p2, weight):
-        self.p1 = np.array(p1, dtype=int)
-        self.p2 = np.array(p2, dtype=int)
-        self.weight = weight
-        self.activate = False
+        self.p1 = np.array(p1, dtype=int)  # Posição do primeiro nó
+        self.p2 = np.array(p2, dtype=int)  # Posição do segundo nó
+        self.weight = weight  # Peso da aresta
+        self.activate = False  # Estado inicial da aresta (desativada)
 
     def set_state(self, state: bool):
-        self.activate = state
+        self.activate = state  # Altera o estado (ativo ou inativo)
 
     def set_attributes(self,
                        color_activate,
                        color_deactivate,
                        default_color_add=70,
                        thickness=2,
-                       thickness_add=3
-                       ):
-        self.activate = False  # começa desativado
+                       thickness_add=3):
+        self.activate = False  # Começa desativada
 
-        self.thickness = thickness
-        self.thickness_add = thickness_add
+        self.thickness = thickness  # Espessura padrão da linha
+        self.thickness_add = thickness_add  # Espessura extra quando ativada
 
-        self.color_activate = color_activate
-        self.color_deactivate = color_deactivate
-        self.default_color_add = default_color_add
+        self.color_activate = color_activate  # Cor da aresta quando ativada
+        self.color_deactivate = color_deactivate  # Cor da aresta quando desativada
+        self.default_color_add = default_color_add  # Cor adicional para bordas
 
     def draw(self, img):
+        # Desenha a aresta na imagem
         if self.activate:
+            # Desenha aresta ativada com cor de borda
             border_color = add_color(
                 self.color_activate, self.default_color_add)
             img = cv2.line(img, self.p1, self.p2, border_color,
-                           self.thickness+self.thickness_add)
+                           self.thickness + self.thickness_add)
             return cv2.line(img, self.p1, self.p2, self.color_activate, self.thickness)
         else:
+            # Desenha aresta desativada com cor padrão
             return cv2.line(img, self.p1, self.p2, self.color_deactivate, self.thickness)
 
 
+# Classe que representa o grafo visual
 class VisualGraph:
     def __init__(self,
                  color_deactivate=(100, 100, 100),
@@ -96,37 +118,32 @@ class VisualGraph:
                  radius_add=10,
                  thickness=2,
                  thickness_add=3) -> None:
-
+        # Atributos de estilo
         self.radius = radius
         self.radius_add = radius_add
         self.thickness = thickness
         self.thickness_add = thickness_add
 
-        self.G = nx.Graph()
+        self.G = nx.Graph()  # Grafo em si (estrutura de dados)
 
+        # Cores de ativação e desativação
         self.color_deactivate = color_deactivate
         self.color_activate = color_activate
         self.color_add = color_add
 
-        self.connections = {}
-        self.compilated = False  # diz que ainda não foi compilado
-        self.node_id_mapping = {}
-        self.node_id_antimapping = {}
+        self.connections = {}  # Armazena conexões entre os nós
+        self.compilated = False  # Indica se o grafo foi compilado
+        self.node_id_mapping = {}  # Mapeamento de IDs dos nós
+        self.node_id_antimapping = {}  # Mapeamento inverso de IDs dos nós
 
     def add(self,
             node: int,
             conn: int,
             weight: float = None):
         """
-        Função para adicionar apenas um nó
-        Args:
-            node:int - id do nó a ser adicionado
-            connection:int - id do nó conectado a ele. É possível passar este
-                parâmetro como None, fazendo com que apenas seja adicionado o nó na rede
-            weight:float [default = None] - peso da connection.
+        Função para adicionar um nó e suas conexões ao grafo.
         """
-
-        # realiza o mapping do nó
+        # Mapeamento dos nós
         if node in self.node_id_mapping.keys():
             node_id = self.node_id_mapping[node]
         else:
@@ -134,7 +151,7 @@ class VisualGraph:
             self.node_id_antimapping[node_id] = node
             self.node_id_mapping[node] = node_id
 
-        # realiza o mapping do connection
+        # Mapeamento das conexões
         if conn is not None:
             if conn in self.node_id_mapping.keys():
                 conn_id = self.node_id_mapping[conn]
@@ -143,10 +160,11 @@ class VisualGraph:
                 self.node_id_antimapping[conn_id] = conn
                 self.node_id_mapping[conn] = conn_id
 
-            self.G.add_edge(node_id, conn_id, weight=weight)
+            self.G.add_edge(node_id, conn_id, weight=weight)  # Adiciona aresta
         else:
-            self.G.add_node(node_id)
+            self.G.add_node(node_id)  # Adiciona apenas o nó
 
+        # Armazena as conexões para o nó
         if node_id in self.connections.keys():
             self.connections[node_id].append((conn_id, weight))
         else:
@@ -157,26 +175,22 @@ class VisualGraph:
                 nodes_positions=None,
                 kwargs_graph={}):
         """
-        Args:
-            img_shape:np.ndarray - shape da imagem que você vai plotar
-            border:int - tamanhdo da borda da imagem
-
-        Função que deve ser chamada depois de colocar todos os nós. 
-        Ela cria os objetos do tipo Node e Aresta para guardar, salvando
-        as posições calculadas deles
+        Função para compilar a representação visual do grafo, 
+        gerando as posições dos nós e arestas.
         """
-
         self.img_shape = np.array(img_shape)
         translade = self.img_shape/2  # valor a ser somado em todos os points
 
-        # retira como se estivesse tirando os 4 cantos
+        # Calcula o tamanho da imagem para incluir a borda
         desired_img_shape = self.img_shape - 2*border
         if nodes_positions is None:
+            # Calcula posições dos nós
             positions = nx.spring_layout(self.G, **kwargs_graph)
             points = list(positions.values())
         else:
             points = nodes_positions
 
+        # Calcula a escala para ajustar os nós na imagem
         min_dims = np.min(points, axis=0)
         max_dims = np.max(points, axis=0)
 
@@ -186,18 +200,20 @@ class VisualGraph:
 
         def get_imgposition(x, y): return translade+(np.array((x, y)))*scale
 
-        # cria os nos e as arestas
+        # Cria os objetos Node e Aresta
         nodes_positions_in_img = [get_imgposition(x, y) for x, y in points]
         self.nodes = [Node(center, center_real) for center, center_real in list(
             zip(nodes_positions_in_img, points))]
 
-        self.arestas = {}  # relaciona nós i,j através de uma aresta
+        # Cria as arestas
+        self.arestas = {}
         for node_idx, connections in list(self.connections.items()):
             for (conn_idx, weight) in connections:
                 self.arestas[(node_idx, conn_idx)] = Aresta(p1=nodes_positions_in_img[node_idx],
                                                             p2=nodes_positions_in_img[conn_idx],
                                                             weight=weight)
 
+        # Configura os atributos dos nós e arestas
         self.set_attributes(self.color_activate,
                             self.color_deactivate,
                             self.color_add,
@@ -213,6 +229,9 @@ class VisualGraph:
                        color_add=None,
                        radius=None, radius_add=None,
                        thickness=None, thickness_add=None):
+        """
+        Função para configurar os atributos de estilo do grafo.
+        """
         if color_activate is None:
             color_activate = self.color_activate
         if color_deactivate is None:
@@ -224,6 +243,7 @@ class VisualGraph:
         if radius_add is None:
             radius_add = self.radius_add
 
+        # Aplica as configurações para todos os nós
         for node in self.nodes:
             node.set_attributes(
                 color_activate,
@@ -233,6 +253,7 @@ class VisualGraph:
                 radius_add=radius_add
             )
 
+        # Aplica as configurações para todas as arestas
         for (i, j), aresta in self.arestas.items():
             aresta.set_attributes(
                 color_activate,
@@ -243,33 +264,29 @@ class VisualGraph:
             )
 
     def plot(self, step=None):
+        """
+        Função para plotar o grafo em uma imagem.
+        """
         if not self.compilated:
             raise ValueError(
                 "Você deve fazer o .compile do grafo antes de chamar o plot")
 
         img = np.full(
-            (self.img_shape[0], self.img_shape[1], 3), 255, dtype='uint8')
+            (self.img_shape[0], self.img_shape[1], 3), 255, dtype='uint8')  # Cria imagem em branco
         for node in self.nodes:
-            img = node.draw(img)
+            img = node.draw(img)  # Desenha os nós
         for (i, j), aresta in self.arestas.items():
-            img = aresta.draw(img)
+            img = aresta.draw(img)  # Desenha as arestas
 
         if step is not None:
+            # Adiciona um texto indicando o número da etapa
             img = cv2.putText(img, f'{step}', (30, 30),
                               cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 0), 1)
         return img
 
     def set_node_state(self, node_id: int, state: bool):
         """
-        Função para alterar o estado de um nó
-            False - desativado (cor padrão)
-            True - ativo (cor ativada)
-
-        Args:
-            node_id:int - nó a ter o estado alterado
-            state:bool - estado ao qual será alterado
-        Return:
-            :bool - se foi possível realizar a ação ou não
+        Função para alterar o estado de um nó.
         """
         if not self.compilated:
             raise ValueError(
@@ -282,16 +299,7 @@ class VisualGraph:
 
     def set_aresta_state(self, node_i: int, node_j: int, state: bool):
         """
-        Função para alterar o estado de uma aresta
-            False - desativado (cor padrão)
-            True - ativo (cor ativada)
-
-        Args:
-            node_i:int - índice do nó i
-            node_j:int - índice do nó j
-            state:bool - estado ao qual será alterado
-        Return:
-            :bool - se foi possível realizar a ação ou não
+        Função para alterar o estado de uma aresta.
         """
         if not self.compilated:
             raise ValueError(
@@ -304,12 +312,8 @@ class VisualGraph:
 
     def save(self, file_name: str):
         """
-        Função que permite salvar o grafo de pequeno mundo gerado
-        em um arquivo .pkl
-        Args:
-            file_name:str - nome do grafo a ser salvo
+        Função que salva o grafo visual em um arquivo `.pkl`.
         """
-
         if not self.compilated:
             file_name += '_uncompilated'
         file_name += '.pkl' if '.pkl' not in file_name else ''
@@ -319,11 +323,7 @@ class VisualGraph:
     @staticmethod
     def load(file_name: str):
         """
-        Método estático que permite abrir um grafo.pkl
-        Args:
-            file_name:str - nome do arquivo
-        Returns:
-            :MundoPequeno - objeto do grafo do arquivo
+        Função que carrega um grafo a partir de um arquivo `.pkl`.
         """
         file_name += '.pkl' if '.pkl' not in file_name else ''
         with open(file_name, "rb") as file:
@@ -331,6 +331,7 @@ class VisualGraph:
             return cast(VisualGraph, file)
 
 
+# Código de execução, onde se define o grafo e chama-se a função de plotagem
 if __name__ == "__main__":
     nodes = [(0, 6, 0.75),
              (0, 19, 1.21),
@@ -366,14 +367,14 @@ if __name__ == "__main__":
              (17, 19, 1.19),
              (21, 28, 0.11),
              (22, 26, 0.68),
-             (25, 26, 0.88)]
+             (25, 26, 0.88)]  # Conexões e pesos dos nós
 
-    Grafo = VisualGraph()
+    Grafo = VisualGraph()  # Criação do grafo visual
     for node, conn, weight in nodes:
-        Grafo.add(node, conn, weight=weight)
+        Grafo.add(node, conn, weight=weight)  # Adiciona nós e arestas
 
-    img_shape = (500, 500, 3)
-    Grafo.compile(img_shape[:2], border=0)
+    img_shape = (500, 500, 3)  # Tamanho da imagem
+    Grafo.compile(img_shape[:2], border=0)  # Compila o grafo para visualização
     Grafo.set_attributes(
         color_activate=(0, 0, 200),
         color_deactivate=(100, 100, 100),
@@ -382,21 +383,23 @@ if __name__ == "__main__":
         radius_add=3,
         thickness=2,
         thickness_add=2
-
     )
 
     def plot():
         for i in range(10):
+            # Geração de estados aleatórios para os nós
             states = np.random.randint(0, 2, len(Grafo.nodes))
             for j, state in enumerate(states):
                 Grafo.set_node_state(j, state)
 
+            # Alteração do estado das arestas
             for j, s_j in enumerate(states):
                 for k, s_k in enumerate(states):
                     a = Grafo.set_aresta_state(j, k, s_j and s_k)
 
+            # Plota o grafo
             img = Grafo.plot()
             cv2.imshow('Batata', img)
-            cv2.waitKey(500)
+            cv2.waitKey(500)  # Espera meio segundo
 
-    plot()
+    plot()  # Chama a função de plotagem
