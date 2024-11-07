@@ -15,7 +15,7 @@ def create_rede(n,k,p):
 
 n=200
 k=7
-quantity_tests=15
+quantity_tests=3
 algorithms_to_run = list(algorithms.keys())
 
 
@@ -53,7 +53,7 @@ for teste in testes:
 
 
 ## Configurando experimentos
-AEstrela_w = 10
+AEstrela_w = 2
 def run_pipeline(algorithm_name:str,
                  rede:MundoPequeno,
                  initial:int,

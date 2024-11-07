@@ -43,7 +43,7 @@ class DFS:
 
         while stack:
             cur = stack.pop()  # Remove o último nó da pilha (topo da pilha).
-
+            
             if cur not in self.visitados:
                 self.visitados.append(cur)  # Marca o nó atual como visitado.
 
@@ -271,7 +271,7 @@ class HillClimb:
         inicial_xy = self.grafo.get_pos(no_inicial)  # Posição do nó inicial.
         # Estimativa inicial.
         cur_est = self.heuristica(inicial_xy, self.grafo.goal_xy)
-
+        
         while cur != no_final:
             print(f'HillClimb: expandindo {cur} ({cur_est = })')
 

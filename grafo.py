@@ -166,7 +166,7 @@ class VisualGraph:
             self.G.add_edge(node_id, conn_id, weight=weight)  # Adiciona aresta
         else:
             self.G.add_node(node_id)  # Adiciona apenas o nó
-        print(f"No {conn} -> mapeamento para: {conn_id}")
+        
         
         # Armazena as conexões para o nó
         if node_id in self.connections.keys():
@@ -215,14 +215,10 @@ class VisualGraph:
         self.nodes = [Node(center, center_real) for center, center_real in list(
             zip(nodes_positions_in_img, points))]
         
-        print("batata: ",indexes)
-        print("self.nodes: \n",self.nodes)
-        
         # Cria as arestas
         self.arestas = {}
         for node_idx, connections in list(self.connections.items()):
             for (conn_idx, weight) in connections:
-                # print(f"self.node_id_antimapping[{node_idx}]: ",self.node_id_antimapping[node_idx])
                 p1 = nodes_positions_in_img[node_idx]
                 p2 = nodes_positions_in_img[conn_idx]
                 self.arestas[(node_idx, conn_idx)] = Aresta(p1=p1,
