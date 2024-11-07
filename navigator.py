@@ -83,11 +83,11 @@ class Navigator(VisualGraph):
             mapped_current_id = current_is_internal
         else:
             mapped_current_id = self.node_id_mapping[current_node_id]
-
+        
         # Obtém os vizinhos do nó atual
         neighboors = self.connections[mapped_current_id]
         neighboors = [neighboor[0] for neighboor in neighboors]
-
+        
         # Mapeia os vizinhos de volta para os ids externos, se necessário
         if not return_internal:
             neighboors = [int(self.node_id_antimapping[neighboor])

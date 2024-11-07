@@ -40,16 +40,13 @@ class DFS:
         # Pilha para armazenar os nós a serem visitados.
         stack = [inicio]  # Inicializa a pilha com o nó inicial.
         self.visitados = []  # Limpa a lista de nós visitados.
-        last_node = None
+
         while stack:
             cur = stack.pop()  # Remove o último nó da pilha (topo da pilha).
-            
+
             if cur not in self.visitados:
                 self.visitados.append(cur)  # Marca o nó atual como visitado.
-                if last_node is not None:
-                    self.grafo.nav(last_node, cur)
-                last_node=cur
-                
+
                 if try_plot:
                     mostra_grafo(self.grafo)  # Plota o grafo se 'try_plot' for True.
 
@@ -58,14 +55,13 @@ class DFS:
                     return True
 
                 # Para cada vizinho do nó atual.
-                print("Vizinhos: ",self.grafo.get_neighboors(cur))
                 for outro in reversed(self.grafo.get_neighboors(cur)):
                     if outro not in self.visitados:
                         # Realiza a navegação para o vizinho e empilha.
-                        
+                        self.grafo.nav(cur, outro)
                         print(f'DFS: Indo de {cur} -> {outro}')
                         stack.append(outro)  # Adiciona o vizinho à pilha.
-
+        
         return False  # Se não encontrou o destino, retorna False.
 
     def run(self, no_inicial: int, no_final: int, try_plot=False) -> bool:

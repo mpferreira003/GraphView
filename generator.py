@@ -148,6 +148,8 @@ class MundoPequeno():
 
         # Adiciona as conexões distantes
         for node, neighboor in list(zip(p_choosed_nodes, far_neighboors)):
+            if node==neighboor:
+                continue
             distance = self.distances[node][neighboor]
             self.connections.append(
                 [int(neighboor), int(node), float(distance)])
