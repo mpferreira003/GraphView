@@ -164,7 +164,7 @@ class MundoPequeno():
                              Verifique se você rodou a função .create_data e .create_connections""")
         return self.connections
 
-    def save(self):
+    def save(self,relative_path=''):
         """
         Salva o grafo de pequeno mundo gerado em um arquivo .pkl
         """
@@ -173,9 +173,10 @@ class MundoPequeno():
             graph_name += f'_k={self.k}_p={self.p}'
         else:
             graph_name += '_NoConnections'
-
+        self.name=graph_name
+        
         # Salva o grafo em um arquivo binário .pkl
-        with open(f"{graph_name}.pkl", "wb") as file:
+        with open(f"{relative_path}/{graph_name}.pkl", "wb") as file:
             pickle.dump(self, file)
 
     @staticmethod

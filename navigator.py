@@ -48,7 +48,7 @@ class Navigator(VisualGraph):
         self.allow_gif = allow_gif
         self.gif_images = []  # Lista para armazenar imagens para o GIF
         super().__init__()  # Chama o construtor da classe base VisualGraph
-
+        
     def compile(self, img_shape: np.ndarray,
                 border: int = 30,
                 color_activate=None,
@@ -76,7 +76,7 @@ class Navigator(VisualGraph):
         )
         self.goal = None  # Inicializa a variável de objetivo (goal)
         self.allow_gif = self.allow_gif  # Mantém a configuração do GIF
-
+        self.distancia_percorrida = 0    # coloca a distância percorrida
     def get_neighboors(self, current_node_id: int, current_is_internal=False, return_internal=False, return_weight=False):
         # Função para obter os vizinhos de um nó
         if current_is_internal:
@@ -92,15 +92,16 @@ class Navigator(VisualGraph):
         if not return_internal:
             neighboors = [int(self.node_id_antimapping[neighboor])
                           for neighboor in neighboors]
-
+        
         # Se for necessário, retorna os pesos das arestas entre os nós
         if return_weight:
             x, y = self.get_pos(current_node_id)
             def dist(par): return math.sqrt((par[0]-x)**2 + (par[1]-y)**2)
-
+            
             return [(idx, dist(self.get_pos(idx))) for idx in neighboors]
         else:
             return neighboors
+            
 
     def nav(self, current_node_id: int, destination_id: int):
         """
@@ -110,10 +111,10 @@ class Navigator(VisualGraph):
         # Etapa de mapeamento para id interno da rede
         mapped_destination_id = self.node_id_mapping[destination_id]
         mapped_current_id = self.node_id_mapping[current_node_id]
-
+        
         # Obtém os vizinhos do nó atual
         neighboors = self.get_neighboors(current_node_id, return_internal=True)
-
+        
         # Verifica se o destino está entre os vizinhos
         if mapped_destination_id in neighboors:
             # Marca a aresta como conectada e o nó de destino como ativado
@@ -122,12 +123,17 @@ class Navigator(VisualGraph):
             self.set_node_state(mapped_destination_id, CONNECTED)
             # Verifica se o objetivo foi atingido
             chegou_no_goal = destination_id == self.goal if self.goal is not None else False
+            
+            # acumula a distancia percorrida:
+            self.distancia_percorrida+=self.arestas[(mapped_current_id,mapped_destination_id)].weight
             return chegou_no_goal
         else:
             # Caso o destino não esteja entre os vizinhos
             raise ValueError(
                 "Ok, provavelmente deu algum erro. O nó de destino não está entre os vizinhos do nó inicial")
-
+    
+    def get_distancia_percorrida(self):
+        return self.distancia_percorrida
     def add_imgtogif(self):
         # Adiciona a imagem atual ao GIF se a opção permitir
         if self.allow_gif:
@@ -207,7 +213,9 @@ class Navigator(VisualGraph):
             node.set_state(DISCONNECTED)
         for aresta in self.arestas.values():
             aresta.set_state(DISCONNECTED)
-
+        
+        # reseta a distância percorrida
+        self.distancia_percorrida=0
     def get_pos(self, node_id: int):
         """
         Retorna a posição xy de um nó

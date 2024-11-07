@@ -34,22 +34,37 @@ class DFS:
     def __init__(self, grafo: Navigator, heuristica=None):
         self.no_final = None  # O nó objetivo (final).
         self.grafo = grafo  # O grafo sobre o qual a busca será realizada.
-        self.visitados = set()  # Conjunto para armazenar nós visitados.
+        self.visitados = []  # Lista para armazenar nós visitados.
 
-    def _dfs(self, cur: int, try_plot=False) -> bool:
-        # Função recursiva para realizar a busca em profundidade.
-        self.visitados.add(cur)  # Marca o nó atual como visitado.
-        if try_plot:
-            mostra_grafo(self.grafo)  # Plota o grafo se 'try_plot' for True.
+    def _dfs(self, inicio: int, try_plot=False) -> bool:
+        # Pilha para armazenar os nós a serem visitados.
+        stack = [inicio]  # Inicializa a pilha com o nó inicial.
+        self.visitados = []  # Limpa a lista de nós visitados.
+        last_node = None
+        while stack:
+            cur = stack.pop()  # Remove o último nó da pilha (topo da pilha).
+            
+            if cur not in self.visitados:
+                self.visitados.append(cur)  # Marca o nó atual como visitado.
+                if last_node is not None:
+                    self.grafo.nav(last_node, cur)
+                last_node=cur
+                
+                if try_plot:
+                    mostra_grafo(self.grafo)  # Plota o grafo se 'try_plot' for True.
 
-        # Para cada vizinho do nó atual.
-        for outro in self.grafo.get_neighboors(cur):
-            if outro not in self.visitados:
-                # Realiza a navegação para o vizinho.
-                self.grafo.nav(cur, outro)
-                print(f'DFS: Indo de {cur} -> {outro}')
-                if outro == self.no_final or self._dfs(outro, try_plot=try_plot):
-                    return True  # Se encontrou o destino, retorna True.
+                # Se o nó final foi encontrado, retorna True.
+                if cur == self.no_final:
+                    return True
+
+                # Para cada vizinho do nó atual.
+                print("Vizinhos: ",self.grafo.get_neighboors(cur))
+                for outro in reversed(self.grafo.get_neighboors(cur)):
+                    if outro not in self.visitados:
+                        # Realiza a navegação para o vizinho e empilha.
+                        
+                        print(f'DFS: Indo de {cur} -> {outro}')
+                        stack.append(outro)  # Adiciona o vizinho à pilha.
 
         return False  # Se não encontrou o destino, retorna False.
 
@@ -59,7 +74,6 @@ class DFS:
             return True  # Se o nó inicial é o final, não há busca a ser feita.
 
         self.no_final = no_final  # Define o nó objetivo.
-        self.visitados.clear()  # Limpa o conjunto de visitados.
         return self._dfs(no_inicial, try_plot=try_plot)  # Inicia a busca.
 
 

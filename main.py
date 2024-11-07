@@ -2,7 +2,7 @@ from generator import MundoPequeno
 from pipeline import *
 
 # ---- cria as conexões
-n = 100  # Número de nós do grafo
+n = 1000  # Número de nós do grafo
 # Cria um grafo de "mundo pequeno" com 100 nós e uma seed fixa
 mp = MundoPequeno(n, seed=42)
 mp.create_data(dim=2)  # Gera os dados de posicionamento dos nós no espaço 2D
@@ -21,6 +21,7 @@ exp_name, delay, historic = pipeline(
     13,                             # Nó objetivo para a busca (nó 13)
     gif_name='batata',             # Nome do arquivo GIF a ser gerado, se try_plot for True
     try_plot=True,                 # Se True, gera o gráfico e o GIF do processo
+    nodes_positions=mp.embeddings,
     # Parâmetros adicionais para o GIF (ajusta o delay entre frames)
     kwargs_gif={'delay_frame': 200},
     # kwargs_run = {'max_it':20}   ## Dá para adicionar parâmetros do algoritmo aqui, como o valor de w no AEstrela
