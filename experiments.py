@@ -13,7 +13,7 @@ def create_rede(n,k,p):
     mp.create_connections(k, p)
     return mp
 
-n=2000
+n=200
 k=7
 quantity_tests=15
 algorithms_to_run = list(algorithms.keys())
@@ -21,9 +21,9 @@ algorithms_to_run = list(algorithms.keys())
 
 
 testes = (
-    {'n':n,'k':7,'p':10/100},
-    # {'n':n,'k':7,'p':5/100},
-    # {'n':n,'k':2,'p':1/100},
+    {'n':n,'k':k,'p':10/100},
+    # {'n':n,'k':k,'p':5/100},
+    # {'n':n,'k':k,'p':1/100},
 )
 print("Instanciando experimentos ----")
     
@@ -87,18 +87,21 @@ def run_test(algorithm_name:str,
     
     delay_mean = 0
     dist_mean = 0
+    steps_mean = 0
     multi_historic = []
     chegou_stats = []
     for i in range(quantity_tests):
         initial = random.randint(0,n-1)
         goal = random.randint(0,n-1)
-        exp_name,delay,dist,chegou,historic = run_pipeline(algorithm_name,rede,initial,goal,heuristica=heuristica)
+        exp_name,delay,dist,chegou,steps,historic = run_pipeline(algorithm_name,rede,initial,goal,heuristica=heuristica)
         delay_mean+=delay
         dist_mean+=dist
+        steps_mean+=steps
         multi_historic.append(historic)
         chegou_stats.append(chegou)
     delay_mean/=quantity_tests
     dist_mean/=quantity_tests
+    steps_mean/=quantity_tests
     if all(chegou_stats):
         chegou_stats=2 ## todos chegaram
     elif any(chegou_stats):
@@ -107,7 +110,7 @@ def run_test(algorithm_name:str,
         chegou_stats=0 ## nenhum chegou
         
     
-    return exp_name,delay_mean,dist_mean,chegou_stats,multi_historic
+    return exp_name,delay_mean,dist_mean,chegou_stats,steps_mean,multi_historic
 
 
 
@@ -136,9 +139,10 @@ def set_bars_values(bars,Y):
             ax.text(
                 barra.get_x() + barra.get_width() / 2,  # posição X
                 barra.get_height(),  # posição Y
-                f'{valor:.2f}',  # texto (valor de Y)
+                valor,  # texto (valor de Y)
                 ha='center',  # alinhamento horizontal
-                va='bottom'  # alinhamento vertical
+                va='bottom',  # alinhamento vertical
+                fontsize=6
             )
 
 colors = np.random.randint(100,200,size=(quantity_tests,3),dtype=int)
@@ -146,7 +150,7 @@ colors = [(float(a[0]/255),float(a[1]/255),float(a[2]/255)) for a in colors]
 for (n,k,p),algorithms_name,algorithms_results in estatisticas:
     fig,axs = plt.subplots(2,3,figsize=(3*6,2*4))
     fig.suptitle(f"Rede mundo pequeno n={n} k={k} p={p}")
-    exp_names,delay_times,dist_percs,chegou_stats,heur_hists = [[r[i] for r in algorithms_results] for i in range(5)]
+    exp_names,delay_times,dist_percs,chegou_stats,steps,heur_hists = [[r[i] for r in algorithms_results] for i in range(6)]
     
     cores = ['g' if stats==2 else ('y' if stats==1 else 'r') for stats in chegou_stats]
     patch_chegou = mpatches.Patch(color='g', label='todos')
@@ -159,7 +163,9 @@ for (n,k,p),algorithms_name,algorithms_results in estatisticas:
     ax.set_title("Comparação de distâncias")
     ax.set_ylabel("Distância média percorrida")
     bars = ax.bar(algorithms_name,dist_percs,color=cores)
-    set_bars_values(bars,dist_percs)
+    print("Steps: ",steps)
+    print("dist_percs: ",dist_percs)
+    set_bars_values(bars,[f'{d:.2f} \\{s:.1f}' for d,s in list(zip(dist_percs,steps))])
     ax.get_yaxis().set_visible(False)
     ax.legend(handles=[patch_chegou,patch_depende,patch_nao])
     ax.tick_params(axis='x',rotation=60)
@@ -170,7 +176,7 @@ for (n,k,p),algorithms_name,algorithms_results in estatisticas:
     ax.set_title("Comparação de tempo (ms)")
     ax.set_ylabel("Tempo médio")
     bars = ax.bar(algorithms_name,delay_times,color=cores)
-    set_bars_values(bars,delay_times)
+    set_bars_values(bars,[f'{d:.2f} \\{s:.1f}' for d,s in list(zip(delay_times,steps))])
     ax.get_yaxis().set_visible(False)
     ax.legend(handles=[patch_chegou,patch_depende,patch_nao])
     ax.tick_params(axis='x',rotation=60)
@@ -186,7 +192,7 @@ for (n,k,p),algorithms_name,algorithms_results in estatisticas:
         for j,hist in enumerate(algorithm_hists):
             if len(hist)==0:
                 continue
-            print("colors[j]: ",colors[j])
+            # print("colors[j]: ",colors[j])
             plot_historic(heuristic_historic=hist,ax=ax,plt_color=colors[j])
     
         # Calcula o intervalo do eixo y com base no valor máximo da heurística e seu desvio padrão

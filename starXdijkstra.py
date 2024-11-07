@@ -53,7 +53,7 @@ for teste in testes:
 
 
 ## Configurando experimentos
-AEstrela_w = 10
+AEstrela_w = 5
 def run_pipeline(algorithm_name:str,
                  rede:MundoPequeno,
                  initial:int,
@@ -175,23 +175,6 @@ for (n,k,p),algorithms_name,algorithms_results in estatisticas:
     ax.legend(handles=[patch_chegou,patch_depende,patch_nao])
     ax.tick_params(axis='x',rotation=60)
     
-    ## Plots de comparação de heurística
-    heuristic_indexes = [2,4,5]
-    algorithms_name_c = [algorithms_name[i] for i in heuristic_indexes]
-    heur_hists_c = [heur_hists[i] for i in heuristic_indexes]
-    for i,(algorithm_name,algorithm_hists) in enumerate(list(zip(algorithms_name_c,heur_hists_c))):
-        ax = axs[i%2][1+int((i+0.5)/2)]
-        ax.set_title(f"Heurística {algorithm_name}")
-        max_len = max([len(hist) for hist in algorithm_hists])
-        for j,hist in enumerate(algorithm_hists):
-            if len(hist)==0:
-                continue
-            print("colors[j]: ",colors[j])
-            plot_historic(heuristic_historic=hist,ax=ax,plt_color=colors[j])
-    
-        # Calcula o intervalo do eixo y com base no valor máximo da heurística e seu desvio padrão
-        y_max_range = np.max([np.max(h) for h in algorithm_hists if len(h)>0]) + np.max([np.std(h) for h in algorithm_hists if len(h)>0])
-        plt.ylim(0, y_max_range)
     
     plt.tight_layout()
     # plt.subplots_adjust(hspace=0.5)

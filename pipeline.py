@@ -101,10 +101,10 @@ def pipeline(mundoPequeno_connections: list,
 
     # Se não houver heurística, retorna apenas o nome do experimento e o tempo
     if heuristica is None:
-        return experiment_name, delay_time,distancia_percorrida,conseguiu_chegar, []
+        return experiment_name, delay_time,distancia_percorrida,conseguiu_chegar, algorithm.grafo.steps_percorridas, []
     else:
         # Caso contrário, retorna também o histórico da heurística
-        return experiment_name, delay_time, distancia_percorrida, conseguiu_chegar, algorithm.heuristic_historic
+        return experiment_name, delay_time, distancia_percorrida, conseguiu_chegar, algorithm.grafo.steps_percorridas,algorithm.heuristic_historic
 
 
 import numpy as np
@@ -144,8 +144,9 @@ def plot_historic(heuristic_historic, ax=None, plt_color='g'):
         plt.xlabel("Steps")
         plt.ylabel("Heuristic")
         
-
+        
         # Plota a heurística ao longo dos passos
+        Xs = np.arange(len(heuristic_historic))  # Passos da busca
         plt.plot(Xs, heuristic_historic, color=plt_color)
         plt.scatter(Xs, heuristic_historic, color=plt_color)
 

@@ -48,7 +48,7 @@ class Navigator(VisualGraph):
         self.allow_gif = allow_gif
         self.gif_images = []  # Lista para armazenar imagens para o GIF
         super().__init__()  # Chama o construtor da classe base VisualGraph
-        
+        self.steps_percorridas = 0
     def compile(self, img_shape: np.ndarray,
                 border: int = 30,
                 color_activate=None,
@@ -126,6 +126,7 @@ class Navigator(VisualGraph):
             
             # acumula a distancia percorrida:
             self.distancia_percorrida+=self.arestas[(mapped_current_id,mapped_destination_id)].weight
+            self.steps_percorridas += 1
             return chegou_no_goal
         else:
             # Caso o destino não esteja entre os vizinhos
@@ -216,6 +217,7 @@ class Navigator(VisualGraph):
         
         # reseta a distância percorrida
         self.distancia_percorrida=0
+        self.steps_percorridas=0
     def get_pos(self, node_id: int):
         """
         Retorna a posição xy de um nó

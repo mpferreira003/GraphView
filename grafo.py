@@ -78,7 +78,7 @@ class Aresta:
 
     def set_state(self, state: bool):
         self.activate = state  # Altera o estado (ativo ou inativo)
-
+    
     def set_attributes(self,
                        color_activate,
                        color_deactivate,
@@ -143,6 +143,8 @@ class VisualGraph:
         """
         Função para adicionar um nó e suas conexões ao grafo.
         """
+        node=int(node)
+        conn=int(conn)
         # Mapeamento dos nós
         if node in self.node_id_mapping.keys():
             node_id = self.node_id_mapping[node]
@@ -157,19 +159,21 @@ class VisualGraph:
                 conn_id = self.node_id_mapping[conn]
             else:
                 conn_id = len(self.node_id_mapping)
+                
                 self.node_id_antimapping[conn_id] = conn
                 self.node_id_mapping[conn] = conn_id
-
+            
             self.G.add_edge(node_id, conn_id, weight=weight)  # Adiciona aresta
         else:
             self.G.add_node(node_id)  # Adiciona apenas o nó
-
+        print(f"No {conn} -> mapeamento para: {conn_id}")
+        
         # Armazena as conexões para o nó
         if node_id in self.connections.keys():
             self.connections[node_id].append((conn_id, weight))
         else:
             self.connections[node_id] = [(conn_id, weight),]
-
+    
     def compile(self, img_shape: np.ndarray,
                 border: int = 30,
                 nodes_positions=None,
@@ -179,17 +183,22 @@ class VisualGraph:
         gerando as posições dos nós e arestas.
         """
         self.img_shape = np.array(img_shape)
-        translade = self.img_shape/2  # valor a ser somado em todos os points
-
+        
         # Calcula o tamanho da imagem para incluir a borda
         desired_img_shape = self.img_shape - 2*border
         if nodes_positions is None:
             # Calcula posições dos nós
             positions = nx.spring_layout(self.G, **kwargs_graph)
             points = list(positions.values())
+            translade = self.img_shape/2  # valor a ser somado em todos os points
         else:
             points = nodes_positions
-
+            translade = np.zeros(2)  # valor a ser somado em todos os points
+        
+        ## reorganiza os pontos de acordo com o mapeamento inicial
+        indexes = [self.node_id_antimapping[i] for i in range(len(points))]
+        points = [points[i] for i in indexes]
+        
         # Calcula a escala para ajustar os nós na imagem
         min_dims = np.min(points, axis=0)
         max_dims = np.max(points, axis=0)
@@ -197,20 +206,27 @@ class VisualGraph:
         graph_height_width = max_dims - min_dims
         # o quanto precisa aumentar para cobrir todo mapa
         scale = (desired_img_shape*1/2) / graph_height_width
-
-        def get_imgposition(x, y): return translade+(np.array((x, y)))*scale
-
+        
+        def get_imgposition(x, y): 
+            return translade+(np.array((x, y)))*scale
+        
         # Cria os objetos Node e Aresta
         nodes_positions_in_img = [get_imgposition(x, y) for x, y in points]
         self.nodes = [Node(center, center_real) for center, center_real in list(
             zip(nodes_positions_in_img, points))]
-
+        
+        print("batata: ",indexes)
+        print("self.nodes: \n",self.nodes)
+        
         # Cria as arestas
         self.arestas = {}
         for node_idx, connections in list(self.connections.items()):
             for (conn_idx, weight) in connections:
-                self.arestas[(node_idx, conn_idx)] = Aresta(p1=nodes_positions_in_img[node_idx],
-                                                            p2=nodes_positions_in_img[conn_idx],
+                # print(f"self.node_id_antimapping[{node_idx}]: ",self.node_id_antimapping[node_idx])
+                p1 = nodes_positions_in_img[node_idx]
+                p2 = nodes_positions_in_img[conn_idx]
+                self.arestas[(node_idx, conn_idx)] = Aresta(p1=p1,
+                                                            p2=p2,
                                                             weight=weight)
 
         # Configura os atributos dos nós e arestas
