@@ -3,7 +3,7 @@ Primeramente, bom dia, este arquivo serve como guia sobre como funciona o nosso 
 
 ## Como instalar?
 Para instalar, sugiro que você crie um ambiente python. Se você estiver usando Linux, faça:
-*Considero que você está dentro da pasta "Grafo", logo depois de clonar do github*
+*Considero que você está dentro da pasta "GraphView", logo depois de clonar do github*
 ```
 python3 -m venv venv
 source venv/bin/activate
