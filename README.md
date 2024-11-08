@@ -31,3 +31,4 @@ Depois, você pode rodar a *experiments.py*, que também irá utilizar o pipelin
 
 ## Observações
 1 - Como não havia um padrão, fazer a contagem de quando acabou uma *step* de um algoritmo, dependeu somente de nossa própria implementação, ou seja, alguns algoritmos podem estar com uma alta contagem de steps simplesmente por que eles são contabilizados de forma diferente na sua programação interna.
+2 - O grafo é gerado entre 0 e 1 e é multiplicado por um fator 'space', que é passado nos experimentos como sendo igual a 'n', como descrito no trabalho

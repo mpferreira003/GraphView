@@ -5,7 +5,7 @@ from pipeline import *
 n = 50  # Número de nós do grafo
 # Cria um grafo de "mundo pequeno" com 100 nós e uma seed fixa
 mp = MundoPequeno(n, seed=42)
-mp.create_data(dim=2)  # Gera os dados de posicionamento dos nós no espaço 2D
+mp.create_data(dim=2,space=n)  # Gera os dados de posicionamento dos nós no espaço 2D
 # Cria as conexões no grafo: k=2 (2 vizinhos mais próximos), p=0.02 (2% de conexões aleatórias)
 mp.create_connections(2, 0.02)
 # Obtém as conexões geradas, que serão usadas no experimento

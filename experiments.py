@@ -9,7 +9,7 @@ import matplotlib.colors as mcolors
 
 def create_rede(n,k,p):
     mp = MundoPequeno(n, seed=42)
-    mp.create_data(dim=2)
+    mp.create_data(dim=2,space=n)
     mp.create_connections(k, p)
     return mp
 
