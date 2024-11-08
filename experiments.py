@@ -13,25 +13,32 @@ def create_rede(n,k,p):
     mp.create_connections(k, p)
     return mp
 
-n=200
+n=2000
 k=7
-quantity_tests=3
+quantity_tests=15
 algorithms_to_run = list(algorithms.keys())
+AEstrela_w = 2
 
 
-
-testes = (
+experimentos = (
     {'n':n,'k':k,'p':10/100},
-    # {'n':n,'k':k,'p':5/100},
-    # {'n':n,'k':k,'p':1/100},
+    {'n':n,'k':k,'p':5/100},
+    {'n':n,'k':k,'p':1/100},
 )
-print("Instanciando experimentos ----")
-    
 
+
+
+
+
+
+
+
+
+print("Instanciando experimentos ----")
 main_path = os.path.dirname(os.path.abspath(__file__))    
 redes=[]
-for teste in testes:
-    n,k,p = teste.values()
+for experimento in experimentos:
+    n,k,p = experimento.values()
     file_path = f'saves/{n}nodes_k={k}_p={p}.pkl'
     print(' '*2,f"Verificando existência de backup [{file_path}]...")
     
@@ -53,7 +60,6 @@ for teste in testes:
 
 
 ## Configurando experimentos
-AEstrela_w = 2
 def run_pipeline(algorithm_name:str,
                  rede:MundoPequeno,
                  initial:int,
@@ -168,7 +174,7 @@ for (n,k,p),algorithms_name,algorithms_results in estatisticas:
     set_bars_values(bars,[f'{d:.2f} \\{s:.1f}' for d,s in list(zip(dist_percs,steps))])
     ax.get_yaxis().set_visible(False)
     ax.legend(handles=[patch_chegou,patch_depende,patch_nao])
-    ax.tick_params(axis='x',rotation=60)
+    ax.tick_params(axis='x',rotation=10)
     
     ## Plot de comparação de tempo
     delay_times = np.array(delay_times)*1000
@@ -179,7 +185,7 @@ for (n,k,p),algorithms_name,algorithms_results in estatisticas:
     set_bars_values(bars,[f'{d:.2f} \\{s:.1f}' for d,s in list(zip(delay_times,steps))])
     ax.get_yaxis().set_visible(False)
     ax.legend(handles=[patch_chegou,patch_depende,patch_nao])
-    ax.tick_params(axis='x',rotation=60)
+    ax.tick_params(axis='x',rotation=10)
     
     ## Plots de comparação de heurística
     heuristic_indexes = [2,4,5]

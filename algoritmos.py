@@ -40,7 +40,7 @@ class DFS:
         # Pilha para armazenar os nós a serem visitados.
         stack = [inicio]  # Inicializa a pilha com o nó inicial.
         self.visitados = []  # Limpa a lista de nós visitados.
-
+        
         while stack:
             cur = stack.pop()  # Remove o último nó da pilha (topo da pilha).
             
