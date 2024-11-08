@@ -31,4 +31,5 @@ Depois, você pode rodar a *experiments.py*, que também irá utilizar o pipelin
 
 ## Observações
 1 - Como não havia um padrão, fazer a contagem de quando acabou uma *step* de um algoritmo, dependeu somente de nossa própria implementação, ou seja, alguns algoritmos podem estar com uma alta contagem de steps simplesmente por que eles são contabilizados de forma diferente na sua programação interna.
-2 - O grafo é gerado entre 0 e 1 e é multiplicado por um fator 'space', que é passado nos experimentos como sendo igual a 'n', como descrito no trabalho
+2 - O grafo é gerado entre 0 e 1 e é multiplicado por um fator 'space', que é passado nos experimentos como sendo igual a 'n', como descrito no trabalho.
+3 - A classe MundoPequeno, feita para atuar como geradora, é implementada de modo a otimizar a geração dos nós e arestas utilizando a biblioteca *numpy*. Caso queira verificar se condiz com o pseudocódigo, confira as funções *create_data* e *create_connections*. A primeira cria as embeddings e faz uma matriz de distâncias e a segunda função utiliza essa matriz de distâncias para pegar os K vizinhos mais próximos de cada nó e formar a lista de conexões/arestas deles. Depois, é são sorteados uma fração *p* de nós aleatoriamente e estes sortearão conexões distantes (conexões que não são as K primeiras).
